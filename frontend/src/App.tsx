@@ -1,137 +1,29 @@
 import './App.css'
-import { stories } from './data/stories'
-import type { Story } from './data/stories'
+import { stories } from './data/mockStories'
+import type { Story } from './types/story'
 import { useState } from 'react'
+import StoryPlayer from './pages/StoryPlayer'
 
 
 
 function App() {
   const [activeStory, setActiveStory] = useState<Story | null>(null)
-  const [sceneIndex, setSceneIndex] = useState(0)
-  const [selectedChoice, setSelectedChoice] = useState<string | null>(null)
-  const [submitted, setSubmitted] = useState(false)
-  const [finished, setFinished] = useState(false)
+
 
   function openStory(story : Story) {
     setActiveStory(story)
-    setSceneIndex(0)
-    setSelectedChoice(null)
-    setSubmitted(false)
-    setFinished(false)
   }
 
   function returnHome() {
     setActiveStory(null)
   }
 
-  function submitAnswer() {
-    if (selectedChoice != null) {
-      setSubmitted(true)
-    }
-  }
-
-  function continueStory() {
-    if (!activeStory) return
-
-    if (sceneIndex < activeStory.scenes.length - 1) {
-      setSceneIndex(sceneIndex + 1)
-      setSelectedChoice(null)
-      setSubmitted(false)
-    } else {
-      setFinished(true)
-    }
-  }
-
   if (activeStory) {
-    const scene = activeStory.scenes[sceneIndex]
-    const isCorrect = selectedChoice === scene.question.correctChoiceId
-
     return (
-      <div className='app'>
-        <header className='header'>
-          <h1>StoryLine</h1>
-          <button type='button' onClick={returnHome}>
-            Back to Library</button>
-        </header>
-
-        <main className='player'>
-          {finished ? (
-            <section className='story-card'>
-              <h2>Story Completed!</h2>
-              <p>You reached the end of {activeStory.title}</p>
-
-              <button type='button' onClick={returnHome}>
-                  Return to Library</button>
-            </section>
-          ) : (
-            <>
-              <div className='progress'>
-                Scene {sceneIndex + 1} of {activeStory.scenes.length}
-              </div>
-              <h2>{scene.title}</h2>
-
-              <section className='dialogue'>
-                {scene.dialogue.map((line, index) => (
-                  <div className='dialogue-line' key={index}>
-                    <strong>{line.speaker}</strong>
-
-                    <p>{line.text}</p>
-
-                  </div>
-                ))}
-              </section>
-
-              <section className='question'>
-                <h3>{scene.question.text}</h3>
-
-                <div className='choices'>
-                  {scene.question.choices.map((choice) => (
-                    <button type='button' key={choice.id}
-                    className={selectedChoice === choice.id
-                              ? 'choice selected' : 'choice'
-                    }
-                    disabled={submitted}
-                    onClick={() => setSelectedChoice(choice.id)}
-                    >
-
-                      {choice.text}
-
-                    </button>
-                  ))}
-
-                </div>
-                  {submitted && (
-                    <div className='feedback' role='status'>
-                      <h4>
-                        {isCorrect ? 'Correct!' : 'Not quite'}
-                      </h4>
-
-                      <p>{scene.question.explanation}</p>
-
-                    </div>
-                  )}
-
-                  {!submitted ? (
-                    <button type='button' 
-                    disabled={selectedChoice === null}
-                    onClick={submitAnswer}
-                    >Check Answer</button>
-                  ) : (
-                    <button type='button' onClick={continueStory}>
-                      {sceneIndex < activeStory.scenes.length - 1
-                      ? 'Continue' : 'Finish Story'}
-                    </button>
-                  )}
-
-              </section>
-            </>
-          )}
-        </main>
-
-      </div>
-    )
-  }
-
+      <StoryPlayer 
+      story={activeStory}
+      onBack={returnHome}/>
+    )}
 
   return (
     <div className="app">
