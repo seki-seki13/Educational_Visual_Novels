@@ -1,5 +1,9 @@
 import { useState } from "react";
 import type { Story } from "../types/story";
+import Results from "../components/Results";
+import type { AnswerRecord, StoryResult } from "../types/attempt";
+import { calculateScore } from "../utils/scoring";
+
 
 type StoryPlayerProps = {
     story: Story
@@ -11,16 +15,47 @@ function StoryPlayer({story, onBack} :
     const [sceneIndex, setSceneIndex] = useState(0)
     const [selectedChoice, setSelectedChoice] = useState<string | null>(null)
     const [submitted, setSubmitted] = useState(false)
-    const [finished, setFinished] = useState(false)
+    const [answers, setAnswers] = useState<AnswerRecord[]>([])
+    const [result, setResult] = useState<StoryResult | null>(null)
 
     const scene = story.scenes[sceneIndex]
     const isCorrect = selectedChoice === scene.question.correctChoiceId
 
 
     function submitAnswer() {
-        if (selectedChoice !== null) {
-            setSubmitted(true)
+        if (selectedChoice === null || submitted) {
+            return
         }
+
+        const selectedOption = scene.question.choices.find(
+            (choice) => choice.id === selectedChoice,
+        )
+
+        const correctOption = scene.question.choices.find(
+            (choice) => choice.id === scene.question.correctChoiceId,
+        )
+
+        if (!selectedOption || !correctOption) {
+            return
+        }
+
+        const answerRecord: AnswerRecord = {
+            sceneId: scene.id,
+            questionText: scene.question.text,
+            selectedChoiceId: selectedOption.id,
+            selectedChoiceText: selectedOption.text,
+            correctChoiceId: correctOption.id,
+            correctChoiceText: correctOption.text,
+            explanation: scene.question.explanation,
+            isCorrect: selectedOption.id === scene.question.correctChoiceId,
+        }
+
+        setAnswers((previousAnswers) => [
+            ...previousAnswers,
+            answerRecord,
+        ])
+
+        setSubmitted(true)
     }
 
     function continueStory() {
@@ -29,7 +64,12 @@ function StoryPlayer({story, onBack} :
             setSelectedChoice(null)
             setSubmitted(false)
         } else {
-            setFinished(true)
+            const finalResult = calculateScore(
+                story.id,
+                story.title,
+                answers,
+            )
+            setResult(finalResult)
         }
     }
 
@@ -42,14 +82,11 @@ function StoryPlayer({story, onBack} :
                 </header>
         
                 <main className='player'>
-                  {finished ? (
-                    <section className='story-card'>
-                      <h2>Story Completed!</h2>
-                      <p>You reached the end of {story.title}</p>
-        
-                      <button type='button' onClick={onBack}>
-                          Return to Library</button>
-                    </section>
+                  {result ? (
+                    <Results 
+                        result={result}
+                        onReturnToLIbrary={onBack}
+                    />
                   ) : (
                     <>
                       <div className='progress'>
