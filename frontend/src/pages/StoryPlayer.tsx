@@ -1,8 +1,9 @@
 import { useState } from "react";
-import type { Story } from "../types/story";
-import Results from "../components/Results";
-import type { AnswerRecord, StoryResult } from "../types/attempt";
-import { calculateScore } from "../utils/scoring";
+import type { Story } from "../types/story.ts";
+import Results from "../components/Results.tsx";
+import type { AnswerFeedback, AnswerRecord, StoryResult } from "../types/attempt.ts";
+import { calculateScore } from "../utils/scoring.ts";
+import { checkAnswer } from "../utils/checking.ts";
 
 
 type StoryPlayerProps = {
@@ -17,13 +18,17 @@ function StoryPlayer({story, onBack} :
     const [submitted, setSubmitted] = useState(false)
     const [answers, setAnswers] = useState<AnswerRecord[]>([])
     const [result, setResult] = useState<StoryResult | null>(null)
+    const [isCorrect, setIsCorrect] = useState(false)
+    const [feedbackItems, setFeedbackItems] = useState<AnswerFeedback[]>([])
 
     const scene = story.scenes[sceneIndex]
-    const isCorrect = selectedChoice === scene.question.correctChoiceId
-
+    const currentFeedback = scene.question ?
+                      feedbackItems.find(
+                        (item) => item.questionId === scene.question?.id
+                      ) : undefined
 
     function submitAnswer() {
-        if (selectedChoice === null || submitted) {
+        if (selectedChoice === null || submitted || !scene.question) {
             return
         }
 
@@ -31,23 +36,23 @@ function StoryPlayer({story, onBack} :
             (choice) => choice.id === selectedChoice,
         )
 
-        const correctOption = scene.question.choices.find(
-            (choice) => choice.id === scene.question.correctChoiceId,
-        )
+        if (!selectedOption) {
+            return
+        }
 
-        if (!selectedOption || !correctOption) {
+        const answerFeedback = checkAnswer(scene.question.id, selectedOption.id, scene.question.choices);
+
+        if (!answerFeedback) {
             return
         }
 
         const answerRecord: AnswerRecord = {
             sceneId: scene.id,
+            questionId: scene.question.id,
             questionText: scene.question.text,
             selectedChoiceId: selectedOption.id,
             selectedChoiceText: selectedOption.text,
-            correctChoiceId: correctOption.id,
-            correctChoiceText: correctOption.text,
-            explanation: scene.question.explanation,
-            isCorrect: selectedOption.id === scene.question.correctChoiceId,
+            isCorrect: answerFeedback.isCorrect,
         }
 
         setAnswers((previousAnswers) => [
@@ -56,6 +61,12 @@ function StoryPlayer({story, onBack} :
         ])
 
         setSubmitted(true)
+        setIsCorrect(answerFeedback.isCorrect)
+
+        setFeedbackItems((previousFeedback) => [
+          ...previousFeedback,
+          answerFeedback
+        ])
     }
 
     function continueStory() {
@@ -63,11 +74,13 @@ function StoryPlayer({story, onBack} :
             setSceneIndex(sceneIndex + 1)
             setSelectedChoice(null)
             setSubmitted(false)
+            setIsCorrect(false)
         } else {
             const finalResult = calculateScore(
                 story.id,
                 story.title,
                 answers,
+                feedbackItems
             )
             setResult(finalResult)
         }
@@ -95,17 +108,23 @@ function StoryPlayer({story, onBack} :
                       <h2>{scene.title}</h2>
         
                       <section className='dialogue'>
-                        {scene.dialogue.map((line, index) => (
-                          <div className='dialogue-line' key={index}>
-                            <strong>{line.speaker}</strong>
-        
+                        {scene.dialogue.map((line, index) => {
+                          const character = story.characters.find(
+                            (character) => character.id === line.characterId
+                          )
+                        
+                          return (
+                            <div className='dialogue-line' key={index}>
+                            <strong>{character?.name ?? line.characterId}</strong>
                             <p>{line.text}</p>
-        
                           </div>
-                        ))}
+                          )
+                          
+                        })}
                       </section>
-        
-                      <section className='question'>
+                      {scene.question ? 
+                      (
+                        <section className='question'>
                         <h3>{scene.question.text}</h3>
         
                         <div className='choices'>
@@ -130,7 +149,7 @@ function StoryPlayer({story, onBack} :
                                 {isCorrect ? 'Correct!' : 'Not quite'}
                               </h4>
         
-                              <p>{scene.question.explanation}</p>
+                              <p>{currentFeedback.explanation}</p>
         
                             </div>
                           )}
@@ -148,6 +167,15 @@ function StoryPlayer({story, onBack} :
                           )}
         
                       </section>
+                      ) : (
+                        <button type='button' onClick={continueStory}>
+                              {sceneIndex < story.scenes.length - 1
+                              ? 'Continue' : 'Finish Story'}
+                            </button>
+                      )
+                      
+                      }
+                      
                     </>
                   )}
                 </main>

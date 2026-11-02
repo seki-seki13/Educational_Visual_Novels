@@ -5,6 +5,7 @@ type StoryResultsProps = {
     onReturnToLIbrary: () => void
 }
 
+
 function Results({result, onReturnToLIbrary}: StoryResultsProps) {
     return (
         <section className='story-card'>
@@ -16,20 +17,22 @@ function Results({result, onReturnToLIbrary}: StoryResultsProps) {
         <p>{result.scorePercentage}% correct</p>
 
         <h3>Answer review</h3>
-        {result.answers.map((answer, index) => (
-            <article key={answer.sceneId}>
-                <h4>Question {index +1}: {answer.questionText}</h4>
-
-                <p>Your answer: {answer.selectedChoiceText}</p>
-
-                <p>Correct answer: {answer.correctChoiceText}</p>
-
-                <p>{answer.isCorrect ? "Correct" : "Incorrect"}</p>
-
-                <p>{answer.explanation}</p>
-            </article>
-        ))}
+        {result.answers.map((answer) => {
+            const feedback = result.feedback.find(
+                (item) => item.questionId === answer.questionId
+            )
         
+             return (<article key={answer.sceneId}>
+                <h4>Question {answer.questionId}: {answer.questionText}</h4>
+
+                <p>Your answer: [{answer.selectedChoiceText}] is {answer.isCorrect ? "Correct" : "Incorrect"}</p>
+
+                <p>Correct answer: {feedback.correctChoiceText}</p>
+
+                <p>Explanation: {feedback.explanation}</p>
+            </article>
+            )
+            })}
         
         <button type='button' onClick={onReturnToLIbrary}>
             Return to Library</button>
