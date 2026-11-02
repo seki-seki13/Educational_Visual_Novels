@@ -1,4 +1,4 @@
-import type { StoryResult } from "../types/attempt" 
+import type { StoryResult } from "../types/attempt.ts" 
 
 type StoryResultsProps = {
     result: StoryResult

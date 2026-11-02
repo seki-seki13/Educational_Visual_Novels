@@ -1,4 +1,4 @@
-import type { AnswerRecord, StoryResult } from '../types/attempt'
+import type { AnswerRecord, StoryResult } from '../types/attempt.ts'
 
 export function calculateScore(
   storyId: string,

@@ -1,5 +1,5 @@
-import { stories } from '../data/mockStories'
-import type { Story } from '../types/story'
+import { stories } from '../data/mockStories.ts'
+import type { Story } from '../types/story.ts'
 
 type StoryLibraryProps = {
     onOpenStory: (story: Story) => void
