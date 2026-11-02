@@ -1,8 +1,8 @@
 import './App.css'
-import type { Story } from './types/story'
+import type { Story } from './types/story.ts'
 import { useState } from 'react'
-import StoryPlayer from './pages/StoryPlayer'
-import Library from './pages/Library'
+import StoryPlayer from './pages/StoryPlayer.tsx'
+import Library from './pages/Library.tsx'
 
 
 
