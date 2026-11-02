@@ -1,9 +1,10 @@
-import type { AnswerRecord, StoryResult } from '../types/attempt.ts'
+import type { AnswerFeedback, AnswerRecord, StoryResult } from '../types/attempt.ts'
 
 export function calculateScore(
   storyId: string,
   storyTitle: string,
   answers: AnswerRecord[],
+  feedback: AnswerFeedback[]
 ): StoryResult {
   const correctAnswers = answers.filter(
     (answer) => answer.isCorrect,
@@ -23,5 +24,6 @@ export function calculateScore(
     correctAnswers,
     scorePercentage,
     answers,
+    feedback
   }
 }
